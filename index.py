@@ -43,6 +43,7 @@ def addPlayer(username):
     db.session.flush()
     session['ID'] = player.id
     db.session.commit()
+    print('Added Player')
 
 @io.on('changeUsername', namespace='/login')
 def changeUsername(playerInput):
