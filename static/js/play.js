@@ -1,5 +1,5 @@
 $(document).ready(function() {
-  const socket = io.connect('192.168.140.26:5000/play')
+  const socket = io.connect('http://' + document.domain + ':' + location.port)
   const gameCode = window.location.pathname.slice(1-5)
   var playerID = null
 

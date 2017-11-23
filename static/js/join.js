@@ -1,4 +1,4 @@
-var socket = io.connect('192.168.140.26:5000/join')
+const socket = io.connect('http://' + document.domain + ':' + location.port)
 
 socket.on('updateGames', function(games) {
   content = ''

@@ -1,5 +1,5 @@
 $(document).ready(function() {
-  const socket = io.connect('192.168.140.26:5000/login')
+  const socket = io.connect('http://' + document.domain + ':' + location.port)
   var id = null
   var username = null
 

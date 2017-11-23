@@ -1,4 +1,4 @@
-const socket = io.connect('192.168.140.26:5000')
+const socket = io.connect('http://' + document.domain + ':' + location.port)
 
 function newGame() {
   socket.emit('newGame')
