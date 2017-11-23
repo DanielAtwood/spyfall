@@ -1,0 +1,18 @@
+h1 {
+  margin: 0;
+}
+
+table {
+  width: 250px;
+  border-spacing: 15px;
+}
+td:first-child {
+  text-align: left;
+  width: 100%;
+}
+td:last-child {
+  text-align: right;
+}
+.noGames {
+  text-align: center !important;
+}

@@ -1,0 +1,14 @@
+h1 {
+  margin: 0;
+}
+
+input {
+  margin: 10px;
+  width: 250px;
+  font-size: 1em;
+  text-align: center;
+  padding: 5px 0;
+  border: 1px solid #dfdfdf;
+  border-radius: 3px;
+  outline: none;
+}

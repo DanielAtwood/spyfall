@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}404 Game not Found{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{url_for('static', filename='css/gameCode404.css')}}">
+<script type="text/javascript" src="{{url_for('static', filename='js/join.js')}}"></script>
+{% endblock %}
+{% block body}
+<h1>404</h1>
+<h2>We couldn't find game <span class="gameCode">{{gameCode}}</span> in our database.</h2>
+<div class="buttons">
+  <a class="button" href="/join">Join a game</a>
+  <button class="button" type="button" name="newGame" onclick="newGame()">Create a game</button>
+</div>
+{% endblock %}

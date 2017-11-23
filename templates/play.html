@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}- Play{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="{{url_for('static', filename='css/play.css')}}">
+  <script type="text/javascript" src="{{url_for('static', filename='js/play.js')}}"></script>
+{% endblock %}
+{% block body %}
+<h1>{{gameCode}}</h1>
+<ul class="players">
+  {% for player in players %}
+  <li>{{player.username}}</li>
+  {% endfor %}
+</ul>
+<button class="startGame" type="button">Start Game!</button>
+{% endblock %}
