@@ -136,4 +136,4 @@ def noGameCode():
     return redirect(url_for('join'))
 
 if __name__ == '__main__':
-    io.run(app, debug = False, host='0.0.0.0')
+    io.run(app, debug = False, host='0.0.0.0', port=8000)
