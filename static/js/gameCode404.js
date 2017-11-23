@@ -1,4 +1,4 @@
-const socket = io.connect('https://' + document.domain + ':' + location.port)
+const socket = io.connect('https://' + document.domain)
 
 function newGame() {
   socket.emit('newGame')

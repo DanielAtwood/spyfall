@@ -1,4 +1,4 @@
-const socket = io.connect('https://' + document.domain + ':' + location.port)
+const socket = io.connect('https://' + document.domain)
 
 socket.on('updateGames', function(games) {
   content = ''

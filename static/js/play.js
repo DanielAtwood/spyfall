@@ -1,5 +1,5 @@
 $(document).ready(function() {
-  const socket = io.connect('https://' + document.domain + ':' + location.port)
+  const socket = io.connect('https://' + document.domain)
   const gameCode = window.location.pathname.slice(1-5)
   var playerID = null
 
