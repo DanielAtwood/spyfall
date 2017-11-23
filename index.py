@@ -1,7 +1,7 @@
 from flask import Flask, render_template, session, redirect, url_for
 from flask_socketio import SocketIO, emit, Namespace, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
-import func
+import func, os
 
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
