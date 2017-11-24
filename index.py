@@ -69,6 +69,7 @@ def joinRoom(gameCode):
     db.session.commit()
     join_room(gameCode)
     updatePlayers(gameCode)
+    updateGames()
     emit('playerID', session['ID'], namespace='/play')
 
 @io.on('disconnect', namespace='/play')
@@ -79,6 +80,7 @@ def playDisconnect():
         player.gameCode = None
         db.session.commit()
         updatePlayers(gameCode)
+        updateGames()
 
 @io.on('updatePlayers', namespace='/play')
 def updatePlayers(gameCode):
@@ -91,7 +93,6 @@ def updatePlayers(gameCode):
         list = []
         for player in players: list.append('<li>%s</li>' % player.username)
         emit('updatePlayers', list, room = gameCode)
-    updateGames()
 
 @io.on('startGame', namespace='/play')
 def startGame(gameCode):
