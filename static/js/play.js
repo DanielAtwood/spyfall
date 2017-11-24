@@ -11,6 +11,7 @@ $(document).ready(function() {
 
   socket.on('updatePlayers', function(players) {
     $('.players').html(players)
+    console.log('Updating Players')
   })
 
   $('.startGame').click(function() {

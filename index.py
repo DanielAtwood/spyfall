@@ -90,7 +90,7 @@ def updatePlayers(gameCode):
     else:
         list = []
         for player in players: list.append('<li>%s</li>' % player.username)
-        emit('updatePlayers', list, broadcast = True, room = gameCode, namespace = '/play')
+        emit('updatePlayers', list, room = gameCode)
     updateGames()
 
 @io.on('startGame', namespace='/play')
