@@ -7,7 +7,7 @@ app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['SECRET_KEY'] = 'secret!'
 io = SocketIO(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://kv26ma2q4bmgeihx:zjjdf7zdzly84ng1@p2d0untihotgr5f6.cbetxkdyhwsb.us-east-1.rds.amazonaws.com/hjht9eula9cn9lvy'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://c3km8v5puh2hmde8:ti8mbanwnztxume3@bfjrxdpxrza9qllq.cbetxkdyhwsb.us-east-1.rds.amazonaws.com/z74mukhitmn7xm5v'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
