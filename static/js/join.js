@@ -1,4 +1,4 @@
-const socket = io.connect('https://' + document.domain)
+const socket = io.connect(location.href)
 
 socket.on('updateGames', function(games) {
   content = ''
@@ -11,13 +11,14 @@ socket.on('updateGames', function(games) {
     $('.games').html('<tr><td class="noGames">No games, make one!</td></tr>')
   }
 })
-socket.on('newGame', function(gameCode) {
-  window.location.href='/play/'+gameCode
-})
 
 function newGame() {
   socket.emit('newGame')
 }
+
+socket.on('newGame', function(gameCode) {
+  window.location.href='/play/'+gameCode
+})
 
 function privateGame() {
   window.location.href='/play/' + $('.privateGame').val()

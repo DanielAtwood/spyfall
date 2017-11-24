@@ -32,24 +32,13 @@ def make_session_permanent():
 
 @io.on('connect', namespace='/login')
 def loginConnection():
-    if 'ID' in session:
-        player = Players.query.filter_by(id = session['ID']).limit(1).first()
-        emit('getPlayerInfo', [player.id, player.username])
-
-@io.on('addPlayer', namespace='/login')
-def addPlayer(username):
-    player = Players(username=username)
-    db.session.add(player)
-    db.session.flush()
-    session['ID'] = player.id
-    db.session.commit()
-    print('Added Player')
+    player = Players.query.filter_by(id = session['ID']).limit(1).first()
+    emit('getPlayerInfo', [player.id, player.username])
 
 @io.on('changeUsername', namespace='/login')
 def changeUsername(playerInput):
     player = Players.query.filter_by(id = playerInput[0]).limit(1).first()
     player.username = playerInput[1]
-    print(playerInput, player.id)
     db.session.commit()
 
 @io.on('connect', namespace='/join')
@@ -71,7 +60,7 @@ def newGame():
     gameCode = func.new()
     db.session.add(Games(code = gameCode))
     db.session.commit()
-    emit('newGame', gameCode, namespace='/join')
+    emit('newGame', gameCode)
 
 @io.on('joinRoom', namespace='/play')
 def joinRoom(gameCode):
@@ -89,7 +78,7 @@ def playDisconnect():
         gameCode = player.gameCode
         player.gameCode = None
         db.session.commit()
-    updatePlayers(gameCode)
+        updatePlayers(gameCode)
 
 @io.on('updatePlayers', namespace='/play')
 def updatePlayers(gameCode):
@@ -117,9 +106,14 @@ def startGame(gameCode):
 
 @app.route('/')
 def login():
-    if 'ID' in session:
-        return render_template('login.html', username = Players.query.filter_by(id = session['ID']).limit(1).first().username)
-    return render_template('login.html')
+    if 'ID' not in session:
+        player = Players(username=None)
+        db.session.add(player)
+        db.session.flush()
+        session['ID'] = player.id
+        db.session.commit()
+        return render_template('login.html')
+    return render_template('login.html', username = Players.query.filter_by(id = session['ID']).limit(1).first().username)
 
 @app.route('/join', strict_slashes=False)
 def join():

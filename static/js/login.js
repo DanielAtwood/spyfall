@@ -1,5 +1,5 @@
 $(document).ready(function() {
-  const socket = io.connect('https://' + document.domain)
+  const socket = io.connect(location.href + 'login')
   var id = null
   var username = null
 
@@ -9,15 +9,10 @@ $(document).ready(function() {
   })
 
   $('form').submit(function(e) {
-    console.log(id)
-    console.log(username)
     var input = $('input').val()
-    if (username == null) {
-      socket.emit('addPlayer', input)
-    } else if (input != username) {
+    if (username != input) {
       socket.emit('changeUsername', [id, input])
     }
-
-    window.location.href='/join'
+    location.href='/join'
   })
 })

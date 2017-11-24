@@ -1,4 +1,4 @@
-const socket = io.connect('https://' + document.domain)
+const socket = io.connect(location.href.slice(0, location.href.search('play')) + 'join')
 
 function newGame() {
   socket.emit('newGame')

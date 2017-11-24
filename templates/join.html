@@ -11,11 +11,15 @@
   <input class="privateGame" type="text" placeholder="Private Game Code" autocorrect="off" autocomplete="off">
 </form>
 <table class="games">
+  {% if games %}
   {% for key, value in games.items() %}
   <tr>
     <td><a href="/play/{{key}}">{{key}}</a></td>
     <td>{{value}}/8</td>
   </tr>
   {% endfor %}
+  {% else %}
+  <tr><td class="noGames">No games, make one!</td></tr>
+  {% endif %}
 </table>
 {% endblock %}

@@ -1,6 +1,6 @@
 $(document).ready(function() {
-  const socket = io.connect('https://' + document.domain)
-  const gameCode = window.location.pathname.slice(1-5)
+  const socket = io.connect(location.href.slice(0, location.href.search('play') + 4))
+  const gameCode = location.href.slice(1-5)
   var playerID = null
 
   socket.emit('joinRoom', gameCode)
