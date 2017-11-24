@@ -102,8 +102,12 @@ def startGame(gameCode):
     game = Games.query.filter_by(code = gameCode).limit(1).first()
     game.state = 1
     db.session.commit()
-    emit('startGame', func.assign(assignPlayers), json = True, room = gameCode)
+    emit('startGame', func.assign(assignPlayers), room = gameCode)
     updateGames()
+
+@io.on('endGame', namespace='/play')
+def endGame(gameCode):
+    emit('endGame', room = gameCode)
 
 @app.route('/')
 def login():
