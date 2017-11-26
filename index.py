@@ -1,6 +1,7 @@
 from flask import Flask, render_template, session, redirect, url_for
 from flask_socketio import SocketIO, emit, Namespace, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
+from random import randint
 import func, os
 
 app = Flask(__name__)
@@ -10,6 +11,17 @@ io = SocketIO(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://c3km8v5puh2hmde8:ti8mbanwnztxume3@bfjrxdpxrza9qllq.cbetxkdyhwsb.us-east-1.rds.amazonaws.com/z74mukhitmn7xm5v'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+class Locations(db.Model):
+    __tablename__ = 'locations'
+    id = db.Column('id', db.Integer, primary_key = True)
+    name = db.Column('name', db.Unicode)
+
+class Roles(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column('id', db.Integer, primary_key = True)
+    locid = db.Column('locationid', db.Integer)
+    name = db.Column('name', db.Unicode)
 
 class Games(db.Model):
     __tablename__ = 'games'
@@ -30,18 +42,18 @@ def countPlayers():
 def make_session_permanent():
     session.permanent = True
 
-@io.on('connect', namespace='/login')
+@io.on('connect', namespace = '/login')
 def loginConnection():
     player = Players.query.filter_by(id = session['ID']).limit(1).first()
     emit('getPlayerInfo', [player.id, player.username])
 
-@io.on('changeUsername', namespace='/login')
+@io.on('changeUsername', namespace = '/login')
 def changeUsername(playerInput):
     player = Players.query.filter_by(id = playerInput[0]).limit(1).first()
     player.username = playerInput[1]
     db.session.commit()
 
-@io.on('connect', namespace='/join')
+@io.on('connect', namespace = '/join')
 def joinConnection():
     if 'ID' in session:
         player = Players.query.filter_by(id = session['ID']).limit(1).first()
@@ -51,18 +63,18 @@ def joinConnection():
             db.session.commit()
     updateGames()
 
-@io.on('updateGames', namespace='/join')
+@io.on('updateGames', namespace = '/join')
 def updateGames():
-    emit('updateGames', countPlayers(), json=True, broadcast=True, namespace='/join')
+    emit('updateGames', countPlayers(), json = True, broadcast = True, namespace = '/join')
 
-@io.on('newGame', namespace='/join')
+@io.on('newGame', namespace = '/join')
 def newGame():
     gameCode = func.new()
     db.session.add(Games(code = gameCode))
     db.session.commit()
     emit('newGame', gameCode)
 
-@io.on('joinRoom', namespace='/play')
+@io.on('joinRoom', namespace = '/play')
 def joinRoom(gameCode):
     player = Players.query.filter_by(id = session['ID']).limit(1).first()
     player.gameCode = gameCode
@@ -70,9 +82,9 @@ def joinRoom(gameCode):
     join_room(gameCode)
     updatePlayers(gameCode)
     updateGames()
-    emit('playerID', session['ID'], namespace='/play')
+    emit('playerID', session['ID'], namespace = '/play')
 
-@io.on('disconnect', namespace='/play')
+@io.on('disconnect', namespace = '/play')
 def playDisconnect():
     if 'ID' in session:
         player = Players.query.filter_by(id = session['ID']).limit(1).first()
@@ -82,7 +94,7 @@ def playDisconnect():
         updatePlayers(gameCode)
         updateGames()
 
-@io.on('updatePlayers', namespace='/play')
+@io.on('updatePlayers', namespace = '/play')
 def updatePlayers(gameCode):
     players = Players.query.filter_by(gameCode = gameCode).all()
     game = Games.query.filter_by(code = gameCode).limit(1).first()
@@ -94,25 +106,27 @@ def updatePlayers(gameCode):
         for player in players: list.append('<li>%s</li>' % player.username)
         emit('updatePlayers', list, room = gameCode)
 
-@io.on('startGame', namespace='/play')
+@io.on('startGame', namespace = '/play')
 def startGame(gameCode):
     assignPlayers = {}
+    location = Locations.query.filter_by(id = randint(1, db.session.query(Locations).count())).limit(1).first()
+    roles = Roles.query.filter_by(locid = location.id).all()
     players = Players.query.filter_by(gameCode = gameCode).all()
-    for player in players: assignPlayers[player.id] = None
     game = Games.query.filter_by(code = gameCode).limit(1).first()
     game.state = 1
     db.session.commit()
-    emit('startGame', func.assign(assignPlayers), room = gameCode)
+    for player in players: assignPlayers[player.id] = None
+    emit('startGame', func.assign(location.name, roles, assignPlayers), room = gameCode)
     updateGames()
 
-@io.on('endGame', namespace='/play')
+@io.on('endGame', namespace = '/play')
 def endGame(gameCode):
     emit('endGame', room = gameCode)
 
 @app.route('/')
 def login():
     if 'ID' not in session:
-        player = Players(username=None)
+        player = Players(username = None)
         db.session.add(player)
         db.session.flush()
         session['ID'] = player.id
@@ -120,18 +134,18 @@ def login():
         return render_template('login.html')
     return render_template('login.html', username = Players.query.filter_by(id = session['ID']).limit(1).first().username)
 
-@app.route('/join', strict_slashes=False)
+@app.route('/join', strict_slashes = False)
 def join():
     return render_template('join.html', games = countPlayers())
 
-@app.route('/play/<gameCode>')
+@app.route('/play/<gameCode>', strict_slashes = False)
 def play(gameCode):
     game = Games.query.filter_by(code = gameCode).limit(1).first()
     if not game: return render_template('gameCode404.html', gameCode = gameCode)
     players = Players.query.filter_by(gameCode = gameCode).all()
     return render_template('play.html', gameCode = gameCode, players = players)
 
-@app.route('/play', strict_slashes=False)
+@app.route('/play', strict_slashes = False)
 def noGameCode():
     return redirect(url_for('join'))
 

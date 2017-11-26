@@ -5,15 +5,12 @@ def new():
     gameCode = ''.join(random.sample(string.ascii_lowercase, 4))
     return gameCode
 
-def assign(players):
-    location = random.choice(list(setup))
-    roles = random.sample(setup[location], len(players) - 1)
+def assign(location, roles, players):
     assigned = {}
-    for index in range(len(players)):
-        if not roles: break
+    for index in range(len(players) - 1):
         player = random.choice(list(players))
-        role = random.randint(0, len(roles) - 1)
-        assigned[player] = roles[role]
+        role = random.randint(0, len(roles)-1)
+        assigned[player] = roles[role].name
         del roles[role]
         del players[player]
     players[list(players)[0]] = 'Spy'
