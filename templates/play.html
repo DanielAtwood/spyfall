@@ -1,15 +1,50 @@
 {% extends 'base.html' %}
 {% block title %}- Play{% endblock %}
 {% block head %}
-  <link rel="stylesheet" href="{{url_for('static', filename='css/play.css')}}">
-  <script type="text/javascript" src="{{url_for('static', filename='js/play.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='css/play.css')}}">
+<script type="text/javascript" src="{{url_for('static', filename='js/play.js')}}"></script>
 {% endblock %}
 {% block body %}
-<h1>{{gameCode}}</h1>
-<ul class="players">
-  {% for player in players %}
-  <li>{{player.username}}</li>
-  {% endfor %}
-</ul>
-<button class="startGame" type="button">Start Game!</button>
+<div class="dynamicContainer">
+  <h1>{{gameCode}}</h1>
+  <ul class="players">
+    {% for player in players %}
+    <li>{{player.username}}</li>
+    {% endfor %}
+  </ul>
+  <button class="startGame button" type="button">Start Game!</button>
+</div>
+<div class="locations">
+  <h2>Locations</h2>
+  <ul>
+    <li>Airplane</li>
+    <li>Bank</li>
+    <li>Beach</li>
+    <li>Casino</li>
+    <li>Cathedral</li>
+    <li>Circus tent</li>
+    <li>Corporate party</li>
+    <li>Crusader army</li>
+    <li>Day spa</li>
+    <li>Embassy</li>
+    <li>Hospital</li>
+    <li>Hotel</li>
+    <li>Military base</li>
+    <li>Movie studio</li>
+    <li>Ocean liner</li>
+    <li>Passenger train</li>
+    <li>Pirate ship</li>
+    <li>Polar station</li>
+    <li>Police station</li>
+    <li>Restaurant</li>
+    <li>School</li>
+    <li>Service station</li>
+    <li>Space station</li>
+    <li>Submarine</li>
+    <li>Supermarket</li>
+    <li>Theater</li>
+    <li>University</li>
+    <li>World War II Squad</li>
+  </ul>
+</div>
 {% endblock %}

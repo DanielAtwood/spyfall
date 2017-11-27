@@ -1,5 +1,4 @@
 import random, string
-from config import setup
 
 def new():
     gameCode = ''.join(random.sample(string.ascii_lowercase, 4))

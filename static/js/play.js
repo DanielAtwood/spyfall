@@ -20,11 +20,12 @@ $(document).ready(function() {
   socket.on('startGame', function(players, location) {
     var content
     if (players[playerID] == 'Spy') {
-      content = '<h1>You are the spy</h1><p class="time"></p><button class="endGame">End Game</button>'
+      content = '<h1>You are the spy</h1>'
     } else {
-      content = '<h1>'+location+'</h1><h3>'+players[playerID]+'</h3><p class="time"></p><button class="endGame">End Game</button>'
+      content = '<h1>'+location+'</h1><h3>'+players[playerID]+'</h3>'
     }
-    $('body').html(content)
+    content += '<p class="time"></p><button class="endGame">End Game</button>'
+    $('.dynamicContainer').html(content)
     var start = new Date()
     var endTime = new Date(new Date().setMinutes(start.getMinutes()+8))
     updateClock()
