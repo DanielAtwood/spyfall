@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, url_for, copy_current_request_context
+from flask import Flask, render_template, session, redirect, url_for
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_session import Session
 from flask_pymongo import PyMongo
