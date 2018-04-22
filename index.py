@@ -4,13 +4,18 @@ from flask_session import Session
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from string import ascii_lowercase
-import os, random, re, eventlet
+import os, random, re, eventlet, subprocess, json
+
+if 'ON_HEROKU_SERVER' not in os.environ:
+    config_vars = json.loads(subprocess.check_output('heroku config -a spyfallonline --json', shell = True).decode())
+    for key, value in config_vars.items():
+        os.environ[key] = value
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '\x01lt\x0cr\xa2\xd48\xfdN\xdc,\x10\x9f\xe9\xf242O4\x8a\xa8\xe3\xe8'
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['MONGO_URI'] = 'mongodb://heroku_g1nhzqz2:bq4s585t3mhbrj4lri1orus5nq@ds211029.mlab.com:11029/heroku_g1nhzqz2'
-app.config['MONGO_DBNAME'] = 'heroku_g1nhzqz2'
+app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
+app.config['MONGO_URI'] = os.environ['MONGODB_URI']
+
 io = SocketIO(app, manage_session = False)
 mongo = PyMongo(app)
 Session(app)
