@@ -1,5 +1,5 @@
 # Spyfall Online
-[https://spyfallonline.herokuapp.com/]
+https://spyfallonline.herokuapp.com/
 
 This is a one page webapp using websockets.
 
