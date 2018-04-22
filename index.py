@@ -15,7 +15,7 @@ db = SQLAlchemy(app)
 class Locations(db.Model):
     __tablename__ = 'locations'
     id = db.Column('id', db.Integer, primary_key = True)
-    name = db.Column('name', db.Unicode)
+    name = db.Column('name', db.Unicode) 
 
 class Roles(db.Model):
     __tablename__ = 'roles'
