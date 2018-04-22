@@ -1,0 +1,11 @@
+<div class="flex_vertical_center">
+  <h1>Create game</h1>
+  <div class="flex_row flex_align_center">
+    <div class="flex_col">
+      <input class="create_game_shortcode" type="text" placeholder="Short code" value="{{short_code}}" maxlength="10" autocomplete="off" autofocus>
+      <p class="create_error"></p>
+    </div>
+    <img src="{{url_for('static', filename='img/send.svg')}}" class="input_submit create_game">
+  </div>
+  <h3 class="load_join_game">Join game</h3>
+</div>

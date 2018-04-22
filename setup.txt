@@ -1,0 +1,13 @@
+Set username
+join game
+see players
+see location and role
+reveal all players roles
+back to game lobby
+
+start at loading screen, load username on connect
+
+card with players
+then it flips and you're at state 1
+the flips back to 0
+Require redo the start game funcs

@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css?family=Lato|Roboto+Slab');
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Roboto Slab';
+  background: #171316;
+  color: #F3F2F2;
+}
+
+.input_submit{
+  width: 50px;
+  cursor: pointer;
+}
+
+h1 {
+  font-size: 2.5em;
+}
+
+p {
+  margin: 0;
+}
+
+.flex_row {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.flex_col {
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.flex_justify_center {
+  justify-content: center;
+}
+
+.flex_align_center {
+  align-items: center;
+}
+
+.load_create_game, .load_join_game {
+  cursor: pointer;
+  user-select: none;
+  margin-top: 0;
+  color: #29B6F6;
+}
+
+.join_error, .create_error {
+  min-height: 21px;
+  color: #dd3333;
+  font-weight: bold;
+}
+
+input {
+  font-size: 1.5em;
+  padding: 15px;
+  border: 0;
+  border-bottom: 1px solid;
+  outline: none;
+  font-family: 'Roboto Slab';
+  background: transparent;
+  color: inherit;
+}
+
+.players {
+  border-collapse: collapse;
+}
+.players td:first-child {
+  vertical-align: baseline;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+button {
+  width: 100%;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid #ccc;
+  outline: none;
+  cursor: pointer;
+}
+
+.location, .role {
+  margin: 0;
+}
+
+.location {
+  font-size: 1.5em;
+}
+
+.role {
+  font-size: 1.2em;
+}
+
+.time {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.card_wrapper {
+  perspective: 1000px;
+  margin: 0 20px;
+}
+
+.card_wrapper:hover .card, .card_wrapper.hover .card {
+  transform: rotateY(180deg);
+}
+
+.card_wrapper, .front, .back {
+  width: 225px;
+  height: 360px;
+}
+
+.card {
+  transition: 0.5s;
+  transform-style: preserve-3d;
+  position: relative;
+  color: #171316;
+}
+
+.front {
+  z-index: 2;
+}
+
+.back {
+  transform: rotateY(180deg);
+}
+
+.front, .back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #ffffff;
+  border-radius: 15px;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  align-content: center;
+  text-align: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+.static_card {
+  width: 225px;
+  height: 360px;
+  background: #ffffff;
+  border-radius: 15px;
+  box-sizing: border-box;
+  padding: 20px;
+  color: #171316;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.short_code {
+  margin: 10px 0;
+}
+
+.buttons_state_0 {
+  margin-top: 20px;
+}
+
+.leave_game, .ready_button {
+  background: #ffffff;
+  color: #171316;
+  transition: 0.3s;
+  border: none;
+}
+
+.leave_game:hover, .ready_button:hover {
+  background: #f7d8e5;
+}
+
+.leave_game {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  margin-right: -0.5px;
+  border-right: 1px solid;
+}
+
+.ready_button {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  margin-left: -0.5px;
+  border-left: 1px solid;
+}

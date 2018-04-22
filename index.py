@@ -1,153 +1,161 @@
-from flask import Flask, render_template, session, redirect, url_for
-from flask_socketio import SocketIO, emit, Namespace, join_room, leave_room
-from flask_sqlalchemy import SQLAlchemy
-from random import randint
-import func, os
+from flask import Flask, render_template, session, redirect, url_for, copy_current_request_context
+from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_session import Session
+from flask_pymongo import PyMongo
+from bson.objectid import ObjectId
+from string import ascii_lowercase
+import os, random, re, eventlet
 
 app = Flask(__name__)
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-app.config['SECRET_KEY'] = 'secret!'
-io = SocketIO(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://c3km8v5puh2hmde8:ti8mbanwnztxume3@bfjrxdpxrza9qllq.cbetxkdyhwsb.us-east-1.rds.amazonaws.com/z74mukhitmn7xm5v'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+app.config['SECRET_KEY'] = '\x01lt\x0cr\xa2\xd48\xfdN\xdc,\x10\x9f\xe9\xf242O4\x8a\xa8\xe3\xe8'
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['MONGO_URI'] = 'mongodb://heroku_g1nhzqz2:bq4s585t3mhbrj4lri1orus5nq@ds211029.mlab.com:11029/heroku_g1nhzqz2'
+app.config['MONGO_DBNAME'] = 'heroku_g1nhzqz2'
+io = SocketIO(app, manage_session = False)
+mongo = PyMongo(app)
+Session(app)
 
-class Locations(db.Model):
-    __tablename__ = 'locations'
-    id = db.Column('id', db.Integer, primary_key = True)
-    name = db.Column('name', db.Unicode) 
+def reCol(collection):
+    return mongo.db[collection]
 
-class Roles(db.Model):
-    __tablename__ = 'roles'
-    id = db.Column('id', db.Integer, primary_key = True)
-    locid = db.Column('locationid', db.Integer)
-    name = db.Column('name', db.Unicode)
+def start_game(id, players, short_code):
+    reCol('games').update_one({'_id': id},{'$set' : {'state': 1}})
+    location = [*reCol('locations').aggregate([{'$sample': {'size': 1}}])][0]
+    spy_id = random.choice([*players])
+    players[spy_id]['role'] = 'Spy'
+    assigned = { spy_id: players.pop(spy_id) }
 
-class Games(db.Model):
-    __tablename__ = 'games'
-    code = db.Column('code', db.Unicode, primary_key = True, unique = True)
-    state = db.Column('state', db.Integer, default = 0)
-    type = db.Column('type', db.Integer, default = 0)
+    for index in [*players]:
+        player = players.pop(index)
+        player['role'] = location['roles'].pop(random.randrange(len(location['roles'])))
+        assigned[index] = player
 
-class Players(db.Model):
-    __tablename__ = 'players'
-    id = db.Column('id', db.Integer, primary_key = True)
-    username = db.Column('username', db.Unicode)
-    gameCode = db.Column('gameCode', db.Integer)
+    players.update(assigned)
+    emit('load_HTML', render_template('game_state_1.html'), room = short_code)
+    emit('start_game', (players, location['name']), room = short_code)
 
-def countPlayers():
-    return func.countPlayers(Games.query.all(), Players.query.all())
+    eventlet.spawn_after(60 * 8, end_game, *[id, short_code])
 
-@app.before_request
-def make_session_permanent():
-    session.permanent = True
+def end_game(id, short_code):
+    reCol('players').update_many({'game_id': id}, {'$unset': {'ready': ''}})
+    reCol('games').update_one({'_id': id}, {'$set': {'state': 0}})
+    emit('load_HTML', render_template('game_state_0.html', short_code = short_code), room = short_code)
+    emit_players(id, short_code)
 
-@io.on('connect', namespace = '/login')
-def loginConnection():
-    player = Players.query.filter_by(id = session['ID']).limit(1).first()
-    emit('getPlayerInfo', [player.id, player.username])
+def leave_game():
+    if 'id' in session:
+        reCol('players').update_one(
+            {'_id': session['id']},
+            {'$unset': {'game_id': '', 'ready': ''}},
+            upsert = True)
+    if 'game_id' in session:
+        emit_players(session['game_id'], session['room'])
+        del session['game_id']
+    if 'room' in session:
+        leave_room(session['room'])
+        del session['room']
 
-@io.on('changeUsername', namespace = '/login')
-def changeUsername(playerInput):
-    player = Players.query.filter_by(id = playerInput[0]).limit(1).first()
-    player.username = playerInput[1]
-    db.session.commit()
+def emit_players(id, short_code):
+    cursor = reCol('players').find({'game_id': id})
+    players = {}
+    start_ready = True if cursor.count() >= 3 else False
+    for player in cursor:
+        player_ready = True if 'ready' in player else False
+        if player_ready == False: start_ready = False
+        players[str(player['_id'])] = {'username': player['username'], 'ready': player_ready}
 
-@io.on('connect', namespace = '/join')
-def joinConnection():
-    if 'ID' in session:
-        player = Players.query.filter_by(id = session['ID']).limit(1).first()
-        if player.gameCode:
-            updatePlayers(player.gameCode)
-            player.gameCode = None
-            db.session.commit()
-    updateGames()
-
-@io.on('updateGames', namespace = '/join')
-def updateGames():
-    emit('updateGames', countPlayers(), json = True, broadcast = True, namespace = '/join')
-
-@io.on('newGame', namespace = '/join')
-def newGame():
-    gameCode = func.new()
-    db.session.add(Games(code = gameCode))
-    db.session.commit()
-    emit('newGame', gameCode)
-
-@io.on('joinRoom', namespace = '/play')
-def joinRoom(gameCode):
-    player = Players.query.filter_by(id = session['ID']).limit(1).first()
-    player.gameCode = gameCode
-    db.session.commit()
-    join_room(gameCode)
-    updatePlayers(gameCode)
-    updateGames()
-    emit('playerID', session['ID'], namespace = '/play')
-
-@io.on('disconnect', namespace = '/play')
-def playDisconnect():
-    if 'ID' in session:
-        player = Players.query.filter_by(id = session['ID']).limit(1).first()
-        gameCode = player.gameCode
-        player.gameCode = None
-        db.session.commit()
-        updatePlayers(gameCode)
-        updateGames()
-
-@io.on('updatePlayers', namespace = '/play')
-def updatePlayers(gameCode):
-    players = Players.query.filter_by(gameCode = gameCode).all()
-    game = Games.query.filter_by(code = gameCode).limit(1).first()
-    if not players and game.state == 1:
-        game.state = 0
-        db.session.commit()
+    if start_ready:
+        start_game(id, players, short_code)
     else:
-        list = []
-        for player in players: list.append('<li>%s</li>' % player.username)
-        emit('updatePlayers', list, room = gameCode)
+        if players: emit('players', players, room = short_code)
+        else: reCol('games').delete_one({'_id': id})
 
-@io.on('startGame', namespace = '/play')
-def startGame(gameCode):
-    assignPlayers = {}
-    location = Locations.query.filter_by(id = randint(1, db.session.query(Locations).count())).limit(1).first()
-    roles = Roles.query.filter_by(locid = location.id).all()
-    players = Players.query.filter_by(gameCode = gameCode).all()
-    game = Games.query.filter_by(code = gameCode).limit(1).first()
-    game.state = 1
-    db.session.commit()
-    for player in players: assignPlayers[player.id] = None
-    emit('startGame', func.assign(location.name, roles, assignPlayers), room = gameCode)
-    updateGames()
+@io.on('connect')
+def connect():
+    leave_game()
+    emit('load_HTML', render_template('set_user.html', username = session['username'] if 'username' in session else None))
 
-@io.on('endGame', namespace = '/play')
-def endGame(gameCode):
-    emit('endGame', room = gameCode)
+@io.on('disconnect')
+def disconnect():
+    print('Disconnected %s %s' % (session['username'], session['id']))
+    leave_game()
+
+@io.on('set_user')
+def new_user_socket(username):
+    leave_game()
+    if 'id' in session:
+        player_id = session['id']
+        reCol('players').update_one(
+            {'_id': session['id']},
+            {'$set': {'username': username}},
+            upsert = True)
+    else:
+        player_id = reCol('players').insert_one({'username': username}).inserted_id
+        session['id'] = player_id
+
+    session['username'] = username
+
+    emit('player_id', str(player_id))
+    emit('load_HTML', render_template('join_game.html'))
+
+@io.on('load_join_game')
+def load_join_game():
+    leave_game()
+    emit('load_HTML', render_template('join_game.html'))
+
+@io.on('load_create_game')
+def load_create_game():
+    leave_game()
+    short_code = ''.join(random.sample(ascii_lowercase, 4))
+    emit('load_HTML', render_template('create_game.html', short_code = short_code))
+
+@io.on('join_game')
+def join_game(short_code):
+    leave_game()
+    game = reCol('games').find_one({'short_code': short_code})
+    if not game:
+        emit('join_error', 'Game does not exist')
+    elif game['state'] != 0:
+        emit('join_error', 'Game already started')
+    else:
+        reCol('players').update_one(
+            {'_id': session['id']},
+            {'$set': {'game_id': game['_id']}},
+            upsert = True)
+        join_room(short_code)
+        session['game_id'] = game['_id']
+        session['room'] = short_code
+        emit('load_HTML', render_template('game_state_0.html', short_code = short_code))
+        emit_players(game['_id'], short_code)
+
+
+@io.on('ready')
+def ready():
+    reCol('players').update_one(
+        {'_id': session['id']},
+        {'$set': {'ready': True}},
+        upsert = True)
+    emit_players(session['game_id'], session['room'])
+
+@io.on('unready')
+def unready():
+    reCol('players').update_one(
+        {'_id': session['id']},
+        {'$unset': {'ready': ''}},
+        upsert = True)
+    emit_players(session['game_id'], session['room'])
+
+@io.on('create_game')
+def create_game(short_code):
+    leave_game()
+    if reCol('games').find_one({'short_code': short_code}):
+        emit('create_error', 'Short code already in use')
+    elif re.findall('[^A-Za-z0-9]+', short_code):
+        emit('create_error', 'Short code must be alphanumeric')
+    else:
+        game_id = reCol('games').insert_one({'short_code': short_code, 'state': 0}).inserted_id
+        join_game(short_code)
 
 @app.route('/')
-def login():
-    if 'ID' not in session:
-        player = Players(username = None)
-        db.session.add(player)
-        db.session.flush()
-        session['ID'] = player.id
-        db.session.commit()
-        return render_template('login.html')
-    return render_template('login.html', username = Players.query.filter_by(id = session['ID']).limit(1).first().username)
-
-@app.route('/join', strict_slashes = False)
-def join():
-    return render_template('join.html', games = countPlayers())
-
-@app.route('/play/<gameCode>', strict_slashes = False)
-def play(gameCode):
-    game = Games.query.filter_by(code = gameCode).limit(1).first()
-    if not game: return render_template('gameCode404.html', gameCode = gameCode)
-    players = Players.query.filter_by(gameCode = gameCode).all()
-    return render_template('play.html', gameCode = gameCode, players = players)
-
-@app.route('/play', strict_slashes = False)
-def noGameCode():
-    return redirect(url_for('join'))
-
-if __name__ == '__main__':
-    io.run(app, debug = False, host = '0.0.0.0', port = int(os.environ.get('PORT', '8000')))
+def start():
+    return render_template('start.html')
