@@ -1,4 +1,3 @@
-import pprint
 import os
 import random
 import re
@@ -76,8 +75,6 @@ def leave_game():
 
 def emit_players(id, short_code):
     cursor = re_col('players').find({'game_id': id})
-    for document in cursor: 
-        pprint.pprint(document)
     players = {}
     start_ready = True if cursor.count() >= 3 else False
     for player in cursor:
