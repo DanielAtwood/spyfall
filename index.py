@@ -4,11 +4,13 @@ import re
 import eventlet
 import subprocess
 import json
+from copy import deepcopy
 from flask import Flask, render_template, session, redirect, url_for
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_session import Session
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
+from bson.json_util import dumps
 from string import ascii_lowercase
 
 if 'ON_HEROKU_SERVER' not in os.environ:
@@ -33,22 +35,34 @@ def re_col(collection):
 
 def start_game(id, players, short_code):
     re_col('games').update_one({'_id': id}, {'$set': {'state': 1}})
+
     location = [*re_col('locations').aggregate([{'$sample': {'size': 1}}])][0]
-    spy_id = random.choice([*players])
-    players[spy_id]['role'] = 'Spy'
-    assigned = {spy_id: players.pop(spy_id)}
+    assigned_players = assign_roles(players, location['roles'])
 
-    for index in [*players]:
-        player = players.pop(index)
-        player['role'] = location['roles'].pop(
-            random.randrange(len(location['roles'])))
-        assigned[index] = player
-
-    players.update(assigned)
     emit('load_HTML', render_template('game_state_1.html'), room=short_code)
-    emit('start_game', (players, location['name']), room=short_code)
+    emit('start_game', (dumps(assigned_players),
+                        location['name']), room=short_code)
 
     eventlet.spawn_after(60 * 8, end_game, *[id, short_code])
+
+
+def assign_roles(players, roles):
+    print(players, roles)
+    ps = deepcopy(players)
+    rs = deepcopy(roles)
+
+    spy = random.choice(ps)
+    spy['role'] = 'Spy'
+    ps.remove(spy)
+
+    for p in ps:
+        r = random.choice(rs)
+        p['role'] = r
+        rs.remove(r)
+
+    ps.append(spy)
+
+    return ps
 
 
 def end_game(id, short_code):
@@ -75,14 +89,15 @@ def leave_game():
 
 def emit_players(id, short_code):
     cursor = re_col('players').find({'game_id': id})
-    players = {}
     start_ready = True if cursor.count() >= 3 else False
-    for player in cursor:
-        player_ready = True if 'ready' in player else False
-        if player_ready is False:
+    players = []
+
+    for p in cursor:
+        if 'ready' not in p:
             start_ready = False
-        players[str(player['_id'])] = {
-            'username': player['username'], 'ready': player_ready}
+        p['_id'] = str(p['_id'])
+        p['game_id'] = str(p['game_id'])
+        players.append(p)
 
     if start_ready:
         start_game(id, players, short_code)
