@@ -1,0 +1,8 @@
+.flex_vertical_center
+    h1 Create game
+    .flex_row.flex_align_center
+        .flex_col
+            input(type="text", placeholder="Short code", value="{{short_code}}", maxlength="10", spellcheck="false", autocomplete="off", autofocus).create_game_shortcode
+            p.create_error
+        img(src="{{url_for('static', filename='img/send.svg')}}").input_submit.create_game
+    h3.load_join_game Join game

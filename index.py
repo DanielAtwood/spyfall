@@ -5,11 +5,10 @@ import eventlet
 import subprocess
 import json
 from copy import deepcopy
-from flask import Flask, render_template, session, redirect, url_for
+from flask import Flask, render_template, session
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_session import Session
 from flask_pymongo import PyMongo
-from bson.objectid import ObjectId
 from bson.json_util import dumps
 from string import ascii_lowercase
 
@@ -23,6 +22,7 @@ app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 app.config['MONGO_URI'] = os.environ['MONGODB_URI']
+app.jinja_env.add_extension('pypugjs.ext.jinja.PyPugJSExtension')
 
 io = SocketIO(app, manage_session=False)
 mongo = PyMongo(app)
@@ -39,7 +39,7 @@ def start_game(id, players, short_code):
     location = [*re_col('locations').aggregate([{'$sample': {'size': 1}}])][0]
     assigned_players = assign_roles(players, location['roles'])
 
-    emit('load_HTML', render_template('game_state_1.html'), room=short_code)
+    emit('load_HTML', render_template('game_state_1.pug'), room=short_code)
     emit('start_game', (dumps(assigned_players),
                         location['name']), room=short_code)
 
@@ -68,7 +68,7 @@ def assign_roles(players, roles):
 def end_game(id, short_code):
     re_col('players').update_many({'game_id': id}, {'$unset': {'ready': ''}})
     re_col('games').update_one({'_id': id}, {'$set': {'state': 0}})
-    emit('load_HTML', render_template('game_state_0.html',
+    emit('load_HTML', render_template('game_state_0.pug',
                                       short_code=short_code), room=short_code)
     emit_players(id, short_code)
 
@@ -113,8 +113,8 @@ def emit_players(id, short_code):
 @io.on('connect')
 def connect():
     leave_game()
-    username = session['username'] if 'username' in session else None
-    emit('load_HTML', render_template('set_user.html', username=username))
+    username = session['username'] if 'username' in session else ''
+    emit('load_HTML', render_template('set_user.pug', username=username))
 
 
 @io.on('disconnect')
@@ -140,20 +140,20 @@ def new_user_socket(username):
     session['username'] = username
 
     emit('player_id', str(player_id))
-    emit('load_HTML', render_template('join_game.html'))
+    emit('load_HTML', render_template('join_game.pug'))
 
 
 @io.on('load_join_game')
 def load_join_game():
     leave_game()
-    emit('load_HTML', render_template('join_game.html'))
+    emit('load_HTML', render_template('join_game.pug'))
 
 
 @io.on('load_create_game')
 def load_create_game():
     leave_game()
     short_code = ''.join(random.sample(ascii_lowercase, 4))
-    emit('load_HTML', render_template('create_game.html',
+    emit('load_HTML', render_template('create_game.pug',
                                       short_code=short_code))
 
 
@@ -174,7 +174,7 @@ def join_game(short_code):
         session['game_id'] = game['_id']
         session['room'] = short_code
         emit('load_HTML', render_template(
-            'game_state_0.html', short_code=short_code))
+            'game_state_0.pug', short_code=short_code))
         emit_players(game['_id'], short_code)
 
 
@@ -210,4 +210,4 @@ def create_game(short_code):
 
 @app.route('/')
 def start():
-    return render_template('start.html')
+    return render_template('start.pug')
