@@ -47,7 +47,6 @@ def start_game(id, players, short_code):
 
 
 def assign_roles(players, roles):
-    print(players, roles)
     ps = deepcopy(players)
     rs = deepcopy(roles)
 
@@ -119,7 +118,6 @@ def connect():
 
 @io.on('disconnect')
 def disconnect():
-    print('Disconnected %s %s' % (session['username'], session['id']))
     leave_game()
 
 
