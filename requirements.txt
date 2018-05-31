@@ -3,3 +3,4 @@ Flask_SocketIO==2.9.6
 Flask_PyMongo==0.5.1
 Flask-Session==0.3.1
 eventlet==0.22.1
+pypugjs==5.6.0
